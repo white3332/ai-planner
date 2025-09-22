@@ -1,5 +1,3 @@
----
-
 ## 🗂️ 프로젝트 구조
 
 ```
@@ -28,16 +26,21 @@ ai-planner/
 ## 시스템 실행
 
 ```
-ai-planner/backend 에서
+# 1. 백엔드(FastAPI & MongoDB)
+cd ai-planner/backend
 
-도커 실행
+# 도커/도커컴포즈 필요
 docker-compose up --build
 
 
-ai-planner/frontend 에서
-npm install -g yarn
-yarn install
-yarn start
 
-주의: 위 명령은 반드시 package.json 파일이 존재하는 폴더 내에서 실행
+# 2. 프론트엔드(React)
+cd ai-planner/frontend
+
+npm install -g yarn  # yarn이 없을 때 한 번만
+yarn install         # 의존성 설치
+yarn start           # 개발서버 실행 (http://localhost:3000)
+
+
+프론트엔드 개발 서버는 3000번, 백엔드는 8000번 포트
 ```
