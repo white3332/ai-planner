@@ -1,0 +1,32 @@
+# Node modules
+/frontend/node_modules/
+/frontend/yarn.lock
+
+# Build outputs
+/frontend/build/
+/frontend/dist/
+
+# FastAPI virtual environment (if any)
+/backend/.venv/
+/backend/env/
+/backend/__pycache__/
+/backend/*.py[cod]
+
+# Docker and database
+/backend/mongo_data/
+/backend/.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Logs
+*.log
