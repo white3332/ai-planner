@@ -7,7 +7,7 @@ ai-planner/
 │   │   ├── App.css  
 │   │   ├── index.js  
 │   │   ├── request_login.js  
-│   │   └── social_login.js  
+│   │   └── social_login.js  <- 미완성
 │   ├── package.json  
 │   └── yarn.lock  
 └── backend/  
