@@ -14,11 +14,11 @@ ai-planner/
 │   ├── package.json  
 │   └── yarn.lock  
 └── backend/  
-    ├── app/  
-    │   └── main.py  
-    ├── requirements.txt  
-    ├── Dockerfile  
-    └── docker-compose.yml 
+│   ├── app/  
+│   │   └── main.py  
+│   ├── requirements.txt  
+│   ├── Dockerfile  
+│   └── docker-compose.yml 
 ```
 
 ---
