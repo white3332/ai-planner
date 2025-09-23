@@ -3,5 +3,8 @@ uvicorn
 motor
 bcrypt
 pydantic
+pydantic-settings  # .env 파일 관리를 위해 사용
+httpx              # 외부 API 요청을 위한 HTTP 클라이언트
+PyJWT              # JWT 생성 및 관리를 위해 사용
 python-dotenv
 email-validator
