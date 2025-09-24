@@ -1,0 +1,407 @@
+/* Landing.module.css */
+
+/* 네비게이션 */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.navContainer {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5%;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4f46e5;
+    text-decoration: none;
+}
+
+.navLinks {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+.navLinks a {
+    text-decoration: none;
+    color: #333;
+    transition: color 0.3s;
+    cursor: pointer;
+}
+
+.navLinks a:hover {
+    color: #4f46e5;
+}
+
+/* 히어로 섹션 */
+.hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 120px 0 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    animation: float 20s infinite linear;
+}
+
+@keyframes float {
+    0% { transform: translateX(-100px); }
+    100% { transform: translateX(100px); }
+}
+
+.heroContent {
+    width: 100%;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    padding: 0 5%;
+}
+
+.hero h1 {
+    font-size: 4.5rem;
+    margin-bottom: 1.5rem;
+    animation: slideInUp 1s ease-out;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.hero p {
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    opacity: 0.95;
+    animation: slideInUp 1s ease-out 0.2s both;
+    line-height: 1.4;
+}
+
+.ctaButton {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 18px 50px;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    animation: slideInUp 1s ease-out 0.4s both;
+    box-shadow: 0 15px 40px rgba(16, 185, 129, 0.3);
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.ctaButton:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 25px 60px rgba(16, 185, 129, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 섹션 공통 스타일 */
+.section {
+    padding: 100px 0;
+    width: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.container {
+    width: 100%;
+    margin: 0;
+    padding: 0 3rem;
+}
+
+.sectionTitle {
+    text-align: center;
+    font-size: 3rem;
+    margin-bottom: 4rem;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+/* 문제점 섹션 */
+.problems {
+    background: #f8fafc;
+    width: 100%;
+}
+
+.problemsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-top: 4rem;
+    max-width: none;
+}
+
+.problemCard {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.problemCard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.problemCard h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.problemCard p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #6b7280;
+}
+
+.problemIcon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* 기능 섹션 */
+.features {
+    background: white;
+    width: 100%;
+}
+
+.featuresGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.featureCard {
+    background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+    padding: 2.5rem;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.featureCard:hover {
+    transform: scale(1.02);
+}
+
+.featureCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #4f46e5, #10b981);
+}
+
+.featureTitle {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+/* 기술 스택 섹션 */
+.techStack {
+    background: #1f2937;
+    color: white;
+    width: 100%;
+}
+
+.techGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.techCategory {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.techCategory h3 {
+    color: #10b981;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.techList {
+    list-style: none;
+    line-height: 2;
+    margin: 0;
+    padding: 0;
+}
+
+.techList li {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* CTA 섹션 */
+.ctaSection {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    text-align: center;
+    padding: 80px 0;
+    width: 100%;
+}
+
+.ctaSection h2 {
+    font-size: 3.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.ctaSection p {
+    font-size: 1.4rem;
+    margin-bottom: 3rem;
+    opacity: 0.95;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 푸터 */
+.footer {
+    background: #111827;
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+    width: 100%;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+    .container {
+        width: 100%;
+        padding: 0 4%;
+    }
+    
+    .navContainer {
+        padding: 0 4%;
+    }
+    
+    .heroContent {
+        padding: 0 4%;
+    }
+    
+    .featuresGrid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 3rem;
+    }
+    
+    .hero p {
+        font-size: 1.2rem;
+    }
+    
+    .sectionTitle {
+        font-size: 2.2rem;
+    }
+    
+    .navLinks {
+        display: none;
+    }
+    
+    .featuresGrid {
+        grid-template-columns: 1fr;
+    }
+    
+    .problemsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .techGrid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .heroContent {
+        padding: 0 3%;
+    }
+    
+    .container {
+        padding: 0 3%;
+    }
+    
+    .navContainer {
+        padding: 0 3%;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .problemsGrid {
+        grid-template-columns: 1fr;
+    }
+    
+    .techGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 스크롤 애니메이션 */
+/* 초기 상태 */
+.fadeIn {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease-out;
+}
+
+/* 애니메이션 완료 시 */
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

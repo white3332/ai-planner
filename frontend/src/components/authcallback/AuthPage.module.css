@@ -1,0 +1,188 @@
+
+.authCallbackContainer {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.loadingSpinner {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e9ecef;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loadingSpinner p {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.errorMessage {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.errorMessage h2 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.errorMessage p {
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.errorMessage button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.errorMessage button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.errorMessage button:active {
+  transform: translateY(0);
+}
+
+.successMessage {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.successMessage::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.successMessage h2 {
+  color: #10b981;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  animation: slideInUp 0.5s ease-out;
+}
+
+.successMessage p {
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  animation: slideInUp 0.5s ease-out 0.2s both;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 성공 메시지에 체크마크 아이콘 추가 */
+.successMessage h2::before {
+  content: '✓';
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  line-height: 30px;
+  margin-right: 10px;
+  font-size: 16px;
+  animation: checkmark 0.6s ease-in-out 0.3s both;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .authCallbackContainer {
+    padding: 15px;
+  }
+  
+  .loadingSpinner,
+  .errorMessage,
+  .successMessage {
+    padding: 2rem;
+  }
+  
+  .errorMessage h2,
+  .successMessage h2 {
+    font-size: 1.3rem;
+  }
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+  }
+}

@@ -1,28 +1,28 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// CSS
-import './App.css';
-
 // Page Components
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard'; // 기존 Dashboard.js를 pages 폴더로 이동
-import AuthCallback from './pages/AuthCallback'; // 기존 AuthCallback.js를 pages 폴더로 이동
+import Dashboard from './pages/DashboardPage'; 
+import AuthCallback from './pages/AuthCallbackPage'; 
 
 // 로그인 상태를 확인하는 헬퍼 함수
 const isAuthenticated = () => {
+  const loginStatus = localStorage.getItem('login_status');
+  if (loginStatus === 'true') {
+    return true;
+  }
+
   const token = localStorage.getItem('auth_token');
   if (!token) return false;
 
   try {
-    // JWT 토큰의 payload를 디코딩하여 만료 시간을 확인
     const payload = JSON.parse(atob(token.split('.')[1]));
-    // 만료 시간(exp)이 현재 시간보다 큰지 확인 (초 단위이므로 1000을 곱함)
     return payload.exp * 1000 > Date.now();
   } catch (error) {
     console.error("Invalid token:", error);
-    localStorage.removeItem('auth_token'); // 잘못된 토큰은 제거
+    localStorage.removeItem('auth_token');
     return false;
   }
 };
@@ -68,6 +68,5 @@ function App() {
     </Router>
   );
 }
-
 
 export default App;

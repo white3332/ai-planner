@@ -65,20 +65,49 @@ class UserCreate(BaseModel):
 # 로그인 엔드포인트
 @app.post("/api/login")
 async def login_user(user: UserLogin):
-    db_user = await db.users.find_one({"email": user.email})
+    db_user = await db.users.find_one({"email": user.email, "provider": ""})
     if not db_user or not bcrypt.checkpw(user.password.encode(), db_user["hashed_password"].encode()):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="이메일 또는 비밀번호가 잘못되었습니다.")
-    return {"message": f"{db_user['name']}님, 환영합니다!"}
+    
+    # JWT 발급
+    token = create_jwt_token(db_user)
+    
+    # user 정보에 provider 필드가 없으면 빈 문자열로
+    provider = db_user.get("provider", "")
+    
+    return {
+        "message": f"{db_user['name']}님, 환영합니다!",
+        "token": token,
+        "user": {
+            "email": db_user["email"],
+            "provider": provider
+        }
+    }
 
 # 회원가입 엔드포인트
 @app.post("/api/signup", status_code=status.HTTP_201_CREATED)
 async def signup_user(user: UserCreate):
-    existing = await db.users.find_one({"email": user.email})
+    # 1) 이미 존재하는지 확인
+    existing = await db.users.find_one({"email": user.email, "provider": ""})
     if existing:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="이미 등록된 이메일입니다.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 등록된 이메일입니다."
+        )
+
+    # 2) 비밀번호 해시화
     hashed = bcrypt.hashpw(user.password.encode(), bcrypt.gensalt()).decode()
-    await db.users.insert_one({"name": user.name, "email": user.email, "hashed_password": hashed})
+
+    # 3) 사용자 문서 삽입 (provider 필드 포함)
+    await db.users.insert_one({
+        "name": user.name,
+        "email": user.email,
+        "hashed_password": hashed,
+        "provider": ""   # 일반 회원가입 유저는 빈 문자열
+    })
+
     return {"message": "회원가입이 성공적으로 완료되었습니다."}
+
 
 # JWT 토큰 생성 함수
 def create_jwt_token(user_data: dict) -> str:
@@ -134,7 +163,10 @@ async def google_callback(request: Request):
         user_data = user_response.json()
         
         # 사용자 DB 처리
-        existing_user = await db.users.find_one({"email": user_data["email"]})
+        existing_user = await db.users.find_one({
+            "email": user_data["email"],
+            "provider": "google"
+        })
         
         if existing_user:
             # 기존 사용자 로그인
@@ -213,7 +245,7 @@ async def kakao_callback(request: Request):
         # profile = kakao_account["profile"]
         
         # 사용자 DB 처리
-        # existing_user = await db.users.find_one({"email": kakao_account["email"]})
+        # existing_user = await db.users.find_one({ "email": user_data["email"], "provider": "kakao" })
         
         # if existing_user:
         #     # 기존 사용자 로그인
@@ -246,7 +278,7 @@ async def kakao_callback(request: Request):
         profile_image = ""
 
         # DB 처리 로직은 그대로 사용
-        existing_user = await db.users.find_one({"email": email})
+        existing_user = await db.users.find_one({"email": user_data["email"]})
         if existing_user:
             user_info = existing_user
         else:
