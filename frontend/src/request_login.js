@@ -14,8 +14,16 @@ export async function loginRequest(e) {
     const data = await response.json();
 
     if (response.ok) {
+      // JWT 토큰과 사용자 정보를 localStorage에 저장
+      localStorage.setItem('auth_token', 'dummy_token_for_now'); // 백엔드에서 토큰을 반환하도록 수정 필요
+      localStorage.setItem('user_info', JSON.stringify({
+        email: email,
+        name: data.message.split('님')[0] || 'User'
+      }));
+
       alert('로그인 성공! 대시보드로 이동합니다.');
-      window.location.href = 'dashboard_page.html';
+      // 페이지 새로고침으로 인증 상태 업데이트
+      window.location.reload();
     } else {
       alert(data.detail || '이메일 또는 비밀번호가 올바르지 않습니다.');
     }

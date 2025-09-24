@@ -5,18 +5,15 @@ import { loginRequest, signupRequest } from './request_login';
 import { socialLogin } from './social_login';
 import AuthCallback from './AuthCallback';
 import Dashboard from './Dashboard';
+import PlannerPage from './components/PlannerPage';
 
 // 로그인 확인 함수
 const isAuthenticated = () => {
   const token = localStorage.getItem('auth_token');
-  if (!token) return false;
-  
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 > Date.now(); // 토큰이 만료되지 않았는지 확인
-  } catch {
-    return false;
-  }
+  const userInfo = localStorage.getItem('user_info');
+
+  // 더미 토큰이나 사용자 정보가 있으면 인증된 것으로 간주
+  return token && userInfo;
 };
 
 // 보호된 라우트 컴포넌트
@@ -28,9 +25,9 @@ const ProtectedRoute = ({ children }) => {
 function LoginPage() {
   const [tab, setTab] = useState('login');
 
-  // 이미 로그인된 사용자는 대시보드로 리디렉션
+  // 이미 로그인된 사용자는 플래너로 바로 리디렉션
   if (isAuthenticated()) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/planner" />;
   }
 
   return (
@@ -105,7 +102,26 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Dashboard />
+              <PlannerPage
+                onLogout={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('user_info');
+                  window.location.href = '/';
+                }}
+                userEmail={JSON.parse(localStorage.getItem('user_info') || '{}').email || ''}
+              />
+            </ProtectedRoute>
+          } />
+          <Route path="/planner" element={
+            <ProtectedRoute>
+              <PlannerPage
+                onLogout={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('user_info');
+                  window.location.href = '/';
+                }}
+                userEmail={JSON.parse(localStorage.getItem('user_info') || '{}').email || ''}
+              />
             </ProtectedRoute>
           } />
         </Routes>

@@ -4,7 +4,9 @@ import bcrypt
 import jwt
 import httpx
 from datetime import datetime, timedelta
-from fastapi import FastAPI, HTTPException, status, Request
+from typing import Optional
+from bson import ObjectId
+from fastapi import FastAPI, HTTPException, status, Request, Query
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -61,6 +63,25 @@ class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
+
+# 학습 계획 Pydantic 모델
+class StudyPlanCreate(BaseModel):
+    title: str
+    type: str  # study, quiz, project, review
+    date: str  # YYYY-MM-DD format
+    start_time: Optional[str] = None  # HH:MM format
+    end_time: Optional[str] = None  # HH:MM format
+    description: Optional[str] = None
+    completed: bool = False
+
+class StudyPlanUpdate(BaseModel):
+    title: Optional[str] = None
+    type: Optional[str] = None
+    date: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    description: Optional[str] = None
+    completed: Optional[bool] = None
 
 # 로그인 엔드포인트
 @app.post("/api/login")
@@ -265,6 +286,155 @@ async def kakao_callback(request: Request):
         token = create_jwt_token(user_info)
         redirect_url = f"{settings.FRONTEND_URL}/auth/callback?token={token}"
         return RedirectResponse(url=redirect_url)
+
+# 학습 계획 생성 엔드포인트
+@app.post("/api/study-plans", status_code=status.HTTP_201_CREATED)
+async def create_study_plan(plan: StudyPlanCreate, user_email: str = Query(...)):
+    try:
+        # 사용자 존재 확인
+        user = await db.users.find_one({"email": user_email})
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 학습 계획 데이터 준비
+        plan_data = {
+            "user_email": user_email,
+            "user_id": str(user["_id"]),
+            "title": plan.title,
+            "type": plan.type,
+            "date": plan.date,
+            "start_time": plan.start_time,
+            "end_time": plan.end_time,
+            "description": plan.description,
+            "completed": plan.completed,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+
+        # MongoDB에 저장
+        result = await db.study_plans.insert_one(plan_data)
+
+        # 생성된 계획 반환
+        created_plan = await db.study_plans.find_one({"_id": result.inserted_id})
+        created_plan["_id"] = str(created_plan["_id"])
+
+        return {"message": "학습 계획이 성공적으로 생성되었습니다.", "plan": created_plan}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 생성 중 오류가 발생했습니다: {str(e)}")
+
+# 학습 계획 조회 엔드포인트
+@app.get("/api/study-plans")
+async def get_study_plans(user_email: str = Query(...)):
+    try:
+        # 사용자 존재 확인
+        user = await db.users.find_one({"email": user_email})
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 해당 사용자의 학습 계획 조회
+        cursor = db.study_plans.find({"user_email": user_email}).sort("date", 1)
+        plans = await cursor.to_list(length=None)
+
+        # ObjectId를 문자열로 변환
+        for plan in plans:
+            plan["_id"] = str(plan["_id"])
+
+        return {"plans": plans}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 조회 중 오류가 발생했습니다: {str(e)}")
+
+# 학습 계획 수정 엔드포인트
+@app.put("/api/study-plans/{plan_id}")
+async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, user_email: str = Query(...)):
+    try:
+        # ObjectId 유효성 검증
+        if not ObjectId.is_valid(plan_id):
+            raise HTTPException(status_code=400, detail="잘못된 계획 ID입니다.")
+
+        # 사용자 존재 확인
+        user = await db.users.find_one({"email": user_email})
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 기존 계획 확인
+        existing_plan = await db.study_plans.find_one({
+            "_id": ObjectId(plan_id),
+            "user_email": user_email
+        })
+        if not existing_plan:
+            raise HTTPException(status_code=404, detail="학습 계획을 찾을 수 없습니다.")
+
+        # 업데이트할 필드만 추출
+        update_data = {}
+        for field, value in plan.dict(exclude_unset=True).items():
+            if value is not None:
+                update_data[field] = value
+
+        if update_data:
+            update_data["updated_at"] = datetime.utcnow()
+
+            # MongoDB에서 업데이트
+            result = await db.study_plans.update_one(
+                {"_id": ObjectId(plan_id), "user_email": user_email},
+                {"$set": update_data}
+            )
+
+            if result.modified_count == 0:
+                raise HTTPException(status_code=400, detail="업데이트할 내용이 없습니다.")
+
+        # 업데이트된 계획 반환
+        updated_plan = await db.study_plans.find_one({"_id": ObjectId(plan_id)})
+        updated_plan["_id"] = str(updated_plan["_id"])
+
+        return {"message": "학습 계획이 성공적으로 수정되었습니다.", "plan": updated_plan}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 수정 중 오류가 발생했습니다: {str(e)}")
+
+# 학습 계획 삭제 엔드포인트
+@app.delete("/api/study-plans/{plan_id}")
+async def delete_study_plan(plan_id: str, user_email: str = Query(...)):
+    try:
+        # ObjectId 유효성 검증
+        if not ObjectId.is_valid(plan_id):
+            raise HTTPException(status_code=400, detail="잘못된 계획 ID입니다.")
+
+        # 사용자 존재 확인
+        user = await db.users.find_one({"email": user_email})
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 기존 계획 확인
+        existing_plan = await db.study_plans.find_one({
+            "_id": ObjectId(plan_id),
+            "user_email": user_email
+        })
+        if not existing_plan:
+            raise HTTPException(status_code=404, detail="학습 계획을 찾을 수 없습니다.")
+
+        # MongoDB에서 삭제
+        result = await db.study_plans.delete_one({
+            "_id": ObjectId(plan_id),
+            "user_email": user_email
+        })
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=400, detail="삭제할 계획이 없습니다.")
+
+        return {"message": "학습 계획이 성공적으로 삭제되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 삭제 중 오류가 발생했습니다: {str(e)}")
 
 # 건강 체크용 루트 엔드포인트
 @app.get("/")
