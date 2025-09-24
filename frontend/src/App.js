@@ -4,8 +4,8 @@ import './App.css';
 import { loginRequest, signupRequest } from './request_login';
 import { socialLogin } from './social_login';
 import AuthCallback from './AuthCallback';
-import Dashboard from './Dashboard';
-import PlannerPage from './components/PlannerPage';
+import Dashboard from './pages/Dashboard/Dashboard';
+import PlannerPage from './pages/PlannerPage/PlannerPage';
 
 // 로그인 확인 함수
 const isAuthenticated = () => {

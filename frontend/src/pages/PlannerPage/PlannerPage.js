@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './PlannerPage.css';
-import { createStudyPlan, getStudyPlans, updateStudyPlan, deleteStudyPlan, groupPlansByDate } from '../api/studyPlanApi';
+import { createStudyPlan, getStudyPlans, updateStudyPlan, deleteStudyPlan, groupPlansByDate } from '../../api/studyPlanApi';
+import Sidebar from '../../components/common/Sidebar/Sidebar';
 
 const PlannerPage = ({ onLogout, userEmail }) => {
   // 날짜를 YYYY-MM-DD 형식으로 변환하는 헬퍼 함수
@@ -277,53 +278,7 @@ const PlannerPage = ({ onLogout, userEmail }) => {
   return (
     <div className="planner-container">
       {/* 사이드바 */}
-      <div className="sidebar">
-        <div className="logo">🤖 AI 학습 플래너</div>
-        <ul className="nav-menu">
-          <li className="nav-item">
-            <a href="/dashboard" className="nav-link">
-              <span>📊</span>
-              <span>대시보드</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="#" className="nav-link active">
-              <span>📅</span>
-              <span>학습 플래너</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="#" className="nav-link">
-              <span>❓</span>
-              <span>퀴즈</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="#" className="nav-link">
-              <span>👥</span>
-              <span>커뮤니티</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="#" className="nav-link">
-              <span>🏆</span>
-              <span>성취도</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="#" className="nav-link">
-              <span>⚙️</span>
-              <span>설정</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <button className="nav-link" onClick={onLogout} style={{width: '100%', background: 'none', border: 'none', color: 'white'}}>
-              <span>🚪</span>
-              <span>로그아웃</span>
-            </button>
-          </li>
-        </ul>
-      </div>
+      <Sidebar activeItem="planner" onLogout={onLogout} />
 
       {/* 메인 컨텐츠 */}
       <div className="main-content">
