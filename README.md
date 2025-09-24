@@ -22,12 +22,15 @@ ai-planner/
 │   │   ├── components/
 │   │   │   ├── authcallback/
 │   │   │   │   ├── AuthComponents.js
-│   │   │   │   └── AuthPage.css
+│   │   │   │   └── AuthPage.module..css
+│   │   │   ├── landing/
+│   │   │   │   ├── LandingComponents.js
+│   │   │   │   └── LandingPage.module..css
 │   │   │   ├── dashboard/
 │   │   │   │   └── (대시보드 UI 컴포넌트)
 │   │   │   └── login/
 │   │   │       ├── LoginComponents.js
-│   │   │       └── LoginPage.css
+│   │   │       └── LoginPage.module..css
 │   │   ├── pages/
 │   │   │   ├── AuthCallbackPage.js
 │   │   │   ├── DashboardPage.js
