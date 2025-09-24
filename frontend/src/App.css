@@ -169,3 +169,63 @@ body {
         padding: 2rem;
     }
 }
+
+
+/* Landing 관련으로 추가 및 수정된 스타일 */
+.logo-link {
+  text-decoration: none;
+}
+
+/* 로그인/회원가입 페이지 메시지 스타일 */
+.message {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.error-message {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.notification-message {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+
+/* AuthCallback 페이지 스타일 */
+.auth-callback-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  background-color: #f8fafc;
+}
+
+.loading-spinner, .error-message, .success-message {
+  padding: 2rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #4f46e5;
+  animation: spin 1s ease infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

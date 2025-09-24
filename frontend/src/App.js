@@ -1,117 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
-import { loginRequest, signupRequest } from './request_login';
-import { socialLogin } from './social_login';
-import AuthCallback from './AuthCallback';
-import Dashboard from './Dashboard';
 
-// 로그인 확인 함수
+// CSS
+import './App.css';
+
+// Page Components
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard'; // 기존 Dashboard.js를 pages 폴더로 이동
+import AuthCallback from './pages/AuthCallback'; // 기존 AuthCallback.js를 pages 폴더로 이동
+
+// 로그인 상태를 확인하는 헬퍼 함수
 const isAuthenticated = () => {
   const token = localStorage.getItem('auth_token');
   if (!token) return false;
-  
+
   try {
+    // JWT 토큰의 payload를 디코딩하여 만료 시간을 확인
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 > Date.now(); // 토큰이 만료되지 않았는지 확인
-  } catch {
+    // 만료 시간(exp)이 현재 시간보다 큰지 확인 (초 단위이므로 1000을 곱함)
+    return payload.exp * 1000 > Date.now();
+  } catch (error) {
+    console.error("Invalid token:", error);
+    localStorage.removeItem('auth_token'); // 잘못된 토큰은 제거
     return false;
   }
 };
 
-// 보호된 라우트 컴포넌트
+// 로그인된 사용자만 접근할 수 있는 보호된 라우트
 const ProtectedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/" />;
-};
-
-// 로그인 페이지 컴포넌트
-function LoginPage() {
-  const [tab, setTab] = useState('login');
-
-  // 이미 로그인된 사용자는 대시보드로 리디렉션
-  if (isAuthenticated()) {
-    return <Navigate to="/dashboard" />;
+  if (!isAuthenticated()) {
+    // 로그인되어 있지 않으면 로그인 페이지로 리디렉션
+    // state를 통해 리디렉션된 이유를 전달할 수 있습니다.
+    return <Navigate to="/login" replace state={{ message: '로그인이 필요합니다.' }} />;
   }
-
-  return (
-    <div className="login-container">
-      <div className="logo">🤖 AI 학습 플래너</div>
-
-      <div className="tab-container">
-        <div className={tab === 'login' ? 'tab active' : 'tab'} onClick={() => setTab('login')}>
-          로그인
-        </div>
-        <div className={tab === 'signup' ? 'tab active' : 'tab'} onClick={() => setTab('signup')}>
-          회원가입
-        </div>
-      </div>
-
-      {tab === 'login' ? (
-        <form onSubmit={loginRequest} className={`login-form ${tab==='login'?'active':''}`}>
-          <div className="form-group">
-            <label htmlFor="email">이메일</label>
-            <input type="email" id="email" placeholder="이메일을 입력하세요" required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">비밀번호</label>
-            <input type="password" id="password" placeholder="비밀번호를 입력하세요" required />
-          </div>
-          <button type="submit" className="btn">로그인</button>
-          <a href="#" className="forgot-password">비밀번호를 잊으셨나요?</a>
-        </form>
-      ) : (
-        <form onSubmit={signupRequest} className={`signup-form ${tab==='signup'?'active':''}`}>
-          <div className="form-group">
-            <label htmlFor="signupName">이름</label>
-            <input type="text" id="signupName" placeholder="이름을 입력하세요" required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="signupEmail">이메일</label>
-            <input type="email" id="signupEmail" placeholder="이메일을 입력하세요" required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="signupPassword">비밀번호</label>
-            <input type="password" id="signupPassword" placeholder="비밀번호를 입력하세요" required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="confirmPassword">비밀번호 확인</label>
-            <input type="password" id="confirmPassword" placeholder="비밀번호를 다시 입력하세요" required />
-          </div>
-          <button type="submit" className="btn">회원가입</button>
-          <div className="terms">
-            회원가입 시 <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다.
-          </div>
-        </form>
-      )}
-
-      <div className="social-login">
-        <button className="social-btn" onClick={() => socialLogin('google')}>
-          <span>🔍</span> Google로 계속하기
-        </button>
-        <button className="social-btn" onClick={() => socialLogin('kakao')}>
-          <span>💬</span> 카카오로 계속하기
-        </button>
-      </div>
-    </div>
-  );
-}
+  return children;
+};
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          {/* '/' 경로: 초기 랜딩 페이지 */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* '/login' 경로: 로그인 및 회원가입 페이지 */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* '/dashboard' 경로: 로그인 후 보이는 대시보드 (보호된 경로) */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* '/auth/callback' 경로: 소셜 로그인 후 리디렉션되는 콜백 페이지 */}
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+
+          {/* 일치하는 경로가 없을 경우 랜딩 페이지로 리디렉션 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </Router>
   );
 }
+
 
 export default App;
