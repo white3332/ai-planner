@@ -436,6 +436,96 @@ async def delete_study_plan(plan_id: str, user_email: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"학습 계획 삭제 중 오류가 발생했습니다: {str(e)}")
 
+# 대시보드 통계 조회 엔드포인트
+@app.get("/api/dashboard/stats")
+async def get_dashboard_stats(user_email: str = Query(...)):
+    try:
+        # 사용자 존재 확인
+        user = await db.users.find_one({"email": user_email})
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 오늘 날짜
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+
+        # 이번 주 월요일부터 일요일까지
+        today_date = datetime.utcnow().date()
+        monday = today_date - timedelta(days=today_date.weekday())
+        sunday = monday + timedelta(days=6)
+        monday_str = monday.strftime("%Y-%m-%d")
+        sunday_str = sunday.strftime("%Y-%m-%d")
+
+        # 1. 오늘 학습 시간 계산
+        today_plans = await db.study_plans.find({
+            "user_email": user_email,
+            "date": today,
+            "completed": True
+        }).to_list(None)
+
+        today_hours = 0
+        for plan in today_plans:
+            if plan.get("start_time") and plan.get("end_time"):
+                try:
+                    start_parts = plan["start_time"].split(":")
+                    end_parts = plan["end_time"].split(":")
+                    start_minutes = int(start_parts[0]) * 60 + int(start_parts[1])
+                    end_minutes = int(end_parts[0]) * 60 + int(end_parts[1])
+                    duration_minutes = end_minutes - start_minutes
+                    if duration_minutes > 0:
+                        today_hours += duration_minutes / 60
+                except:
+                    continue
+
+        # 2. 주간 진행률 계산 (완료된 계획 개수 기준)
+        weekly_plans = await db.study_plans.find({
+            "user_email": user_email,
+            "date": {"$gte": monday_str, "$lte": sunday_str}
+        }).to_list(None)
+
+        weekly_progress = 0
+        if weekly_plans:
+            completed_count = len([p for p in weekly_plans if p.get("completed")])
+            total_count = len(weekly_plans)
+            weekly_progress = round((completed_count / total_count) * 100) if total_count > 0 else 0
+
+        # 3. 연속 학습일 계산
+        streak_days = 0
+        current_date = today_date
+
+        while streak_days < 365:  # 최대 1년까지만 확인
+            date_str = current_date.strftime("%Y-%m-%d")
+
+            daily_completed = await db.study_plans.find_one({
+                "user_email": user_email,
+                "date": date_str,
+                "completed": True
+            })
+
+            if daily_completed:
+                streak_days += 1
+                current_date -= timedelta(days=1)
+            else:
+                break
+
+        # 4. 총 포인트 (간단히 완료된 계획 수 × 10)
+        total_completed = await db.study_plans.count_documents({
+            "user_email": user_email,
+            "completed": True
+        })
+        total_points = total_completed * 10
+
+        return {
+            "today_hours": round(today_hours, 1),
+            "weekly_progress": weekly_progress,
+            "streak_days": streak_days,
+            "total_points": total_points
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"통계 조회 중 오류가 발생했습니다: {str(e)}")
+
 # 건강 체크용 루트 엔드포인트
 @app.get("/")
 def read_root():

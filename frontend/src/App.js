@@ -27,7 +27,7 @@ function LoginPage() {
 
   // 이미 로그인된 사용자는 플래너로 바로 리디렉션
   if (isAuthenticated()) {
-    return <Navigate to="/planner" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return (
@@ -102,14 +102,7 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <PlannerPage
-                onLogout={() => {
-                  localStorage.removeItem('auth_token');
-                  localStorage.removeItem('user_info');
-                  window.location.href = '/';
-                }}
-                userEmail={JSON.parse(localStorage.getItem('user_info') || '{}').email || ''}
-              />
+              <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/planner" element={

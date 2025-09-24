@@ -4,6 +4,10 @@
   background: #f8f9fa;
   line-height: 1.6;
   min-height: 100vh;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
 }
 
 .planner-container * {
@@ -13,10 +17,8 @@
 }
 
 .sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
   width: 250px;
+  min-width: 250px;
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -30,6 +32,7 @@
   font-weight: bold;
   margin-bottom: 2rem;
   padding: 0 1rem;
+  color: white;
 }
 
 .nav-menu {
@@ -61,16 +64,18 @@
 }
 
 .main-content {
-  margin-left: 250px;
-  padding: 2rem;
+  flex: 1;
+  padding: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .header {
   background: white;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -116,9 +121,12 @@
 
 .calendar-container {
   background: white;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-header {
@@ -159,6 +167,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   background: #e9ecef;
+  flex: 1;
 }
 
 .calendar-day-header {
@@ -171,7 +180,7 @@
 
 .calendar-day {
   background: white;
-  min-height: 120px;
+  min-height: 140px;
   padding: 10px;
   border: 1px solid #e9ecef;
   cursor: pointer;
@@ -214,7 +223,7 @@
 }
 
 .study-item.completed {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%) !important;
 }
 
 .study-item.quiz {
@@ -230,11 +239,11 @@
 }
 
 .ai-suggestions {
-  margin-top: 2rem;
+  margin-top: 1rem;
   background: white;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .suggestions-title {

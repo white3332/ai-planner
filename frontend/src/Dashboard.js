@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 
 const Dashboard = () => {
   const [userInfo, setUserInfo] = useState({ email: '', provider: '' });
+  const [stats, setStats] = useState({
+    today_hours: 0,
+    weekly_progress: 0,
+    streak_days: 0,
+    total_points: 0
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user_info');
@@ -13,6 +20,31 @@ const Dashboard = () => {
       });
     }
   }, []);
+
+  // 통계 데이터 로드
+  useEffect(() => {
+    const loadDashboardStats = async () => {
+      if (!userInfo.email) return;
+
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8000/api/dashboard/stats?user_email=${userInfo.email}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        } else {
+          console.error('통계 로드 실패');
+        }
+      } catch (error) {
+        console.error('통계 로드 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardStats();
+  }, [userInfo.email]);
 
   const getProviderText = (provider) => {
     if (provider === 'google') return 'Google 연동됨';
@@ -26,26 +58,413 @@ const Dashboard = () => {
     window.location.href = '/';
   };
 
-  return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>대시보드 페이지</h1>
-      <div style={{ margin: '1rem 0' }}>
-        <p><strong>아이디:</strong> {userInfo.email}</p>
-        <p><strong>연동 정보:</strong> {getProviderText(userInfo.provider)}</p>
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '1.2rem',
+        color: '#667eea'
+      }}>
+        🔄 통계 정보를 불러오는 중...
       </div>
-      <button
-        onClick={handleLogout}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: '#e53e3e',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
-      >
-        로그아웃
-      </button>
+    );
+  }
+
+  return (
+    <div style={{
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      background: '#f8f9fa',
+      minHeight: '100vh',
+      display: 'flex',
+      margin: 0,
+      padding: 0,
+      width: '100vw'
+    }}>
+      {/* 사이드바 */}
+      <div style={{
+        width: '250px',
+        minWidth: '250px',
+        height: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: '2rem 0',
+        zIndex: 1000
+      }}>
+        <div style={{
+          textAlign: 'center',
+          fontSize: '1.2rem',
+          fontWeight: 'bold',
+          marginBottom: '2rem',
+          padding: '0 1rem',
+          color: 'white'
+        }}>
+          🤖 AI 학습 플래너
+        </div>
+
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              gap: '10px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRight: '3px solid white'
+            }}>
+              <span>📊</span>
+              <span>대시보드</span>
+            </div>
+          </li>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <a href="/planner" style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              textDecoration: 'none',
+              gap: '10px',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'transparent';
+            }}>
+              <span>📅</span>
+              <span>학습 플래너</span>
+            </a>
+          </li>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              gap: '10px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => alert('퀴즈 기능은 추후 구현 예정입니다.')}>
+              <span>❓</span>
+              <span>퀴즈</span>
+            </div>
+          </li>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              gap: '10px',
+              cursor: 'pointer'
+            }}
+            onClick={() => alert('커뮤니티 기능은 추후 구현 예정입니다.')}>
+              <span>👥</span>
+              <span>커뮤니티</span>
+            </div>
+          </li>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              gap: '10px',
+              cursor: 'pointer'
+            }}
+            onClick={() => alert('성취도 기능은 추후 구현 예정입니다.')}>
+              <span>🏆</span>
+              <span>성취도</span>
+            </div>
+          </li>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              gap: '10px',
+              cursor: 'pointer'
+            }}
+            onClick={() => alert('설정 기능은 추후 구현 예정입니다.')}>
+              <span>⚙️</span>
+              <span>설정</span>
+            </div>
+          </li>
+          <li style={{ marginBottom: '0.5rem' }}>
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '1rem 1.5rem',
+              color: 'white',
+              gap: '10px',
+              width: '100%',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left'
+            }}
+            onClick={handleLogout}>
+              <span>🚪</span>
+              <span>로그아웃</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      {/* 메인 컨텐츠 */}
+      <div style={{ flex: 1, padding: 0, height: '100vh', overflowY: 'auto' }}>
+      {/* 헤더 */}
+      <div style={{
+        background: 'white',
+        padding: '1rem 1.5rem',
+        borderRadius: '15px',
+        boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
+        marginBottom: '1rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div>
+          <h1 style={{ color: '#333', marginBottom: '0.5rem' }}>안녕하세요, {userInfo.email}님! 👋</h1>
+          <p style={{ color: '#666', margin: 0 }}>오늘도 열심히 학습해보세요</p>
+        </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#e53e3e',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          로그아웃
+        </button>
+      </div>
+
+      {/* 통계 카드들 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '2rem',
+        marginBottom: '3rem'
+      }}>
+        {/* 오늘 학습 시간 */}
+        <div style={{
+          background: 'white',
+          padding: '3rem',
+          borderRadius: '15px',
+          boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          transition: 'transform 0.3s ease'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏰</div>
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#667eea',
+            marginBottom: '0.5rem'
+          }}>
+            {stats.today_hours}시간
+          </div>
+          <div style={{ color: '#666', fontSize: '0.9rem' }}>오늘 학습 시간</div>
+        </div>
+
+        {/* 주간 목표 달성률 */}
+        <div style={{
+          background: 'white',
+          padding: '3rem',
+          borderRadius: '15px',
+          boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎯</div>
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#667eea',
+            marginBottom: '0.5rem'
+          }}>
+            {stats.weekly_progress}%
+          </div>
+          <div style={{ color: '#666', fontSize: '0.9rem' }}>주간 목표 달성</div>
+        </div>
+
+        {/* 연속 학습일 */}
+        <div style={{
+          background: 'white',
+          padding: '3rem',
+          borderRadius: '15px',
+          boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔥</div>
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#667eea',
+            marginBottom: '0.5rem'
+          }}>
+            {stats.streak_days}일
+          </div>
+          <div style={{ color: '#666', fontSize: '0.9rem' }}>연속 학습일</div>
+        </div>
+
+        {/* 총 포인트 */}
+        <div style={{
+          background: 'white',
+          padding: '3rem',
+          borderRadius: '15px',
+          boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📈</div>
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#667eea',
+            marginBottom: '0.5rem'
+          }}>
+            {stats.total_points}
+          </div>
+          <div style={{ color: '#666', fontSize: '0.9rem' }}>총 포인트</div>
+        </div>
+      </div>
+
+      {/* 빠른 실행 */}
+      <div style={{
+        background: 'white',
+        padding: '3rem',
+        borderRadius: '15px',
+        boxShadow: '0 5px 15px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h2 style={{
+          fontSize: '1.3rem',
+          fontWeight: 'bold',
+          color: '#333',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <span>⚡</span>
+          빠른 실행
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '2rem'
+        }}>
+          <button
+            onClick={() => window.location.href = '/planner'}
+            style={{
+              padding: '2.5rem',
+              background: 'white',
+              border: '2px solid #e9ecef',
+              borderRadius: '15px',
+              textDecoration: 'none',
+              color: '#333',
+              textAlign: 'center',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '14px',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = '#667eea';
+              e.target.style.transform = 'translateY(-3px)';
+              e.target.style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = '#e9ecef';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            <div style={{ fontSize: '2rem' }}>📅</div>
+            <div>학습 플래너</div>
+          </button>
+
+          <button
+            onClick={() => alert('퀴즈 기능은 추후 구현 예정입니다.')}
+            style={{
+              padding: '2.5rem',
+              background: 'white',
+              border: '2px solid #e9ecef',
+              borderRadius: '15px',
+              color: '#333',
+              textAlign: 'center',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '14px',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem' }}>📝</div>
+            <div>새 퀴즈 생성</div>
+          </button>
+
+          <button
+            onClick={() => alert('질문하기 기능은 추후 구현 예정입니다.')}
+            style={{
+              padding: '2.5rem',
+              background: 'white',
+              border: '2px solid #e9ecef',
+              borderRadius: '15px',
+              color: '#333',
+              textAlign: 'center',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '14px',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem' }}>💬</div>
+            <div>질문하기</div>
+          </button>
+
+          <button
+            onClick={() => alert('진도 보고서 기능은 추후 구현 예정입니다.')}
+            style={{
+              padding: '2.5rem',
+              background: 'white',
+              border: '2px solid #e9ecef',
+              borderRadius: '15px',
+              color: '#333',
+              textAlign: 'center',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '14px',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <div style={{ fontSize: '2rem' }}>📊</div>
+            <div>진도 보고서</div>
+          </button>
+
+        </div>
+      </div>
+      </div>
     </div>
   );
 };

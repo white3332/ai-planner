@@ -281,7 +281,7 @@ const PlannerPage = ({ onLogout, userEmail }) => {
         <div className="logo">🤖 AI 학습 플래너</div>
         <ul className="nav-menu">
           <li className="nav-item">
-            <a href="#" className="nav-link">
+            <a href="/dashboard" className="nav-link">
               <span>📊</span>
               <span>대시보드</span>
             </a>
