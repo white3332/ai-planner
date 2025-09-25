@@ -4,8 +4,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 // Page Components
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/DashboardPage'; 
 import AuthCallback from './pages/AuthCallbackPage'; 
+import Dashboard from './pages/DashboardPage'; 
+import PlannerPage from './pages/PlannerPage';
 
 // 로그인 상태를 확인하는 헬퍼 함수
 const isAuthenticated = () => {
@@ -49,15 +50,24 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           
           {/* '/dashboard' 경로: 로그인 후 보이는 대시보드 (보호된 경로) */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>} />
+
+          {/* '/planner' 경로: 대시보드 (보호된 경로) */}
+          <Route path="/planner" element={
+            <ProtectedRoute>
+              <PlannerPage
+                onLogout={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('user_info');
+                  window.location.href = '/';
+                }}
+                userEmail={JSON.parse(localStorage.getItem('user_info') || '{}').email || ''}
+              />
+            </ProtectedRoute>} />
+
           {/* '/auth/callback' 경로: 소셜 로그인 후 리디렉션되는 콜백 페이지 */}
           <Route path="/auth/callback" element={<AuthCallback />} />
 

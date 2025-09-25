@@ -1,11 +1,15 @@
 # backend/app/main.py
+
 import os
 import bcrypt
 import jwt
 import httpx
 from datetime import datetime, timedelta
-from fastapi import FastAPI, HTTPException, status, Request
+from typing import Optional
+from bson import ObjectId
+from fastapi import FastAPI, HTTPException, status, Request, Query, Depends
 from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, EmailStr
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,6 +66,61 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+# 학습 계획 Pydantic 모델
+class StudyPlanCreate(BaseModel):
+    title: str
+    type: str  # study, quiz, project, review
+    date: str  # YYYY-MM-DD format
+    start_time: Optional[str] = None  # HH:MM format
+    end_time: Optional[str] = None  # HH:MM format
+    description: Optional[str] = None
+    completed: bool = False
+
+class StudyPlanUpdate(BaseModel):
+    title: Optional[str] = None
+    type: Optional[str] = None
+    date: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    description: Optional[str] = None
+    completed: Optional[bool] = None
+
+# 클라이언트가 "/api/login" 경로로 아이디/비밀번호를 보내 토큰을 받아가도록 설정
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+
+# 현재 사용자를 가져오는 Dependency 함수
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # 토큰 디코딩
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+    
+    # 토큰에서 얻은 user_id로 DB에서 사용자 조회
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if user is None:
+        raise credentials_exception
+    return user
+
+# JWT 토큰 생성 함수
+def create_jwt_token(user_data: dict) -> str:
+    payload = {
+        "user_id": str(user_data["_id"]),
+        "email": user_data["email"],
+        "name": user_data["name"],
+        "provider": user_data.get("provider", ""),
+        "exp": datetime.utcnow() + timedelta(hours=24)  # 24시간 후 만료
+    }
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
 # 로그인 엔드포인트
 @app.post("/api/login")
 async def login_user(user: UserLogin):
@@ -109,15 +168,6 @@ async def signup_user(user: UserCreate):
     return {"message": "회원가입이 성공적으로 완료되었습니다."}
 
 
-# JWT 토큰 생성 함수
-def create_jwt_token(user_data: dict) -> str:
-    payload = {
-        "user_id": str(user_data["_id"]),
-        "email": user_data["email"],
-        "name": user_data["name"],
-        "exp": datetime.utcnow() + timedelta(hours=24)  # 24시간 후 만료
-    }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 # 구글 OAuth 시작
 @app.get("/auth/google")
@@ -192,6 +242,8 @@ async def google_callback(request: Request):
         redirect_url = f"{settings.FRONTEND_URL}/auth/callback?token={token}"
         return RedirectResponse(url=redirect_url)
 
+
+
 # 카카오 OAuth 시작
 @app.get("/auth/kakao")
 async def kakao_login():
@@ -238,65 +290,279 @@ async def kakao_callback(request: Request):
             headers={"Authorization": f"Bearer {token_result['access_token']}"}
         )
         user_data = user_response.json()
-        print(user_data)
 
         # 카카오 사용자 정보 처리
-        # kakao_account = user_data["kakao_account"]
-        # profile = kakao_account["profile"]
-        
-        # 사용자 DB 처리
-        # existing_user = await db.users.find_one({ "email": user_data["email"], "provider": "kakao" })
-        
-        # if existing_user:
-        #     # 기존 사용자 로그인
-        #     user_info = existing_user
-        # else:
-        #     # 새 사용자 생성
-        #     new_user = {
-        #         "name": profile["nickname"],
-        #         "email": kakao_account["email"],
-        #         "provider": "kakao",
-        #         "provider_id": str(user_data["id"]),
-        #         "profile_picture": profile.get("profile_image_url", ""),
-        #         "created_at": datetime.utcnow()
-        #     }
-        #     result = await db.users.insert_one(new_user)
-        #     new_user["_id"] = result.inserted_id
-        #     user_info = new_user
-        
-        # # JWT 생성
-        # token = create_jwt_token(user_info)
-        
-        # # 프론트엔드로 리디렉션
-        # redirect_url = f"{settings.FRONTEND_URL}/auth/callback?token={token}"
-        # return RedirectResponse(url=redirect_url)
-    
-        # 테스트용 임시값
-        email = "test@example.com"
-        name = "테스트 유저"
-        provider_id = "temporary_id"
-        profile_image = ""
+        kakao_account = user_data.get("kakao_account", {})
+        profile = kakao_account.get("profile", {})
+        email = kakao_account.get("email")
 
-        # DB 처리 로직은 그대로 사용
-        existing_user = await db.users.find_one({"email": user_data["email"]})
+        if not email:
+            raise HTTPException(status_code=400, detail="카카오 계정에서 이메일 정보를 가져올 수 없습니다.")
+
+        # 사용자 DB 처리
+        existing_user = await db.users.find_one({"email": email, "provider": "kakao"})
+        
         if existing_user:
+            # 기존 사용자 로그인
             user_info = existing_user
         else:
+            # 새 사용자 생성
             new_user = {
-                "name": name,
+                "name": profile.get("nickname", "사용자"),
                 "email": email,
                 "provider": "kakao",
-                "provider_id": provider_id,
-                "profile_picture": profile_image,
+                "provider_id": str(user_data["id"]),
+                "profile_picture": profile.get("profile_image_url", ""),
                 "created_at": datetime.utcnow()
             }
             result = await db.users.insert_one(new_user)
             new_user["_id"] = result.inserted_id
             user_info = new_user
-
+        
+        # JWT 생성
         token = create_jwt_token(user_info)
+        
+        # 프론트엔드로 리디렉션
         redirect_url = f"{settings.FRONTEND_URL}/auth/callback?token={token}"
         return RedirectResponse(url=redirect_url)
+    
+
+
+# 학습 계획 생성 엔드포인트
+@app.post("/api/study-plans", status_code=status.HTTP_201_CREATED)
+async def create_study_plan(plan: StudyPlanCreate, current_user: dict = Depends(get_current_user)):
+    try:
+        # 학습 계획 데이터 준비
+        plan_data = {
+            "user_id": current_user["_id"], 
+            "title": plan.title,
+            "type": plan.type,
+            "date": plan.date,
+            "start_time": plan.start_time,
+            "end_time": plan.end_time,
+            "description": plan.description,
+            "completed": plan.completed,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+
+        # MongoDB에 저장
+        result = await db.study_plans.insert_one(plan_data)
+
+        # 생성된 계획 반환
+        created_plan = await db.study_plans.find_one({"_id": result.inserted_id})
+        created_plan["_id"] = str(created_plan["_id"])
+
+        return {"message": "학습 계획이 성공적으로 생성되었습니다.", "plan": created_plan}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 생성 중 오류가 발생했습니다: {str(e)}")
+
+# 학습 계획 조회 엔드포인트
+@app.get("/api/study-plans")
+async def get_study_plans(current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user["_id"]
+
+        # 해당 사용자의 학습 계획 조회
+        cursor = db.study_plans.find({"user_id": user_id}).sort("date", 1)
+        plans = await cursor.to_list(length=None)
+
+        # ObjectId를 문자열로 변환
+        for plan in plans:
+            plan["_id"] = str(plan["_id"])
+
+        return {"plans": plans}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 조회 중 오류가 발생했습니다: {str(e)}")
+
+# 학습 계획 수정 엔드포인트
+@app.put("/api/study-plans/{plan_id}")
+async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user["_id"]
+
+        # ObjectId 유효성 검증
+        if not ObjectId.is_valid(plan_id):
+            raise HTTPException(status_code=400, detail="잘못된 계획 ID입니다.")
+
+        # 기존 계획 확인
+        existing_plan = await db.study_plans.find_one({ # <--------- 수정 필요
+            "_id": ObjectId(plan_id),
+            "user_id": user_id
+        })
+        if not existing_plan:
+            raise HTTPException(status_code=404, detail="학습 계획을 찾을 수 없습니다.")
+
+        # 업데이트할 필드만 추출
+        update_data = {}
+        for field, value in plan.dict(exclude_unset=True).items():
+            if value is not None:
+                update_data[field] = value
+
+        if update_data:
+            update_data["updated_at"] = datetime.utcnow()
+
+            # MongoDB에서 업데이트
+            result = await db.study_plans.update_one( # <--------- 수정 필요
+                {"_id": ObjectId(plan_id), "user_id": user_id},
+                {"$set": update_data}
+            )
+
+            if result.modified_count == 0:
+                raise HTTPException(status_code=400, detail="업데이트할 내용이 없습니다.")
+
+        # 업데이트된 계획 반환
+        updated_plan = await db.study_plans.find_one({"_id": ObjectId(plan_id)})
+        updated_plan["_id"] = str(updated_plan["_id"])
+
+        return {"message": "학습 계획이 성공적으로 수정되었습니다.", "plan": updated_plan}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 수정 중 오류가 발생했습니다: {str(e)}")
+
+# 학습 계획 삭제 엔드포인트
+@app.delete("/api/study-plans/{plan_id}")
+async def delete_study_plan(plan_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user["_id"]
+
+        # ObjectId 유효성 검증
+        if not ObjectId.is_valid(plan_id):
+            raise HTTPException(status_code=400, detail="잘못된 계획 ID입니다.")
+
+        # 사용자 존재 확인
+        user = await db.users.find_one({"user_id": user_id}) # <--------- 수정 필요
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 기존 계획 확인
+        existing_plan = await db.study_plans.find_one({ # <--------- 수정 필요
+            "_id": ObjectId(plan_id),
+            "user_id": user_id
+        })
+        if not existing_plan:
+            raise HTTPException(status_code=404, detail="학습 계획을 찾을 수 없습니다.")
+
+        # MongoDB에서 삭제
+        result = await db.study_plans.delete_one({ # <--------- 수정 필요
+            "_id": ObjectId(plan_id),
+            "user_id": user_id
+        })
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=400, detail="삭제할 계획이 없습니다.")
+
+        return {"message": "학습 계획이 성공적으로 삭제되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"학습 계획 삭제 중 오류가 발생했습니다: {str(e)}")
+
+
+
+
+# 대시보드 통계 조회 엔드포인트
+@app.get("/api/dashboard/stats")
+async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user["_id"]
+
+        # 사용자 존재 확인
+        user = await db.users.find_one({"user_id": user_id}) # <--------- 수정 필요
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # 오늘 날짜
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+
+        # 이번 주 월요일부터 일요일까지
+        today_date = datetime.utcnow().date()
+        monday = today_date - timedelta(days=today_date.weekday())
+        sunday = monday + timedelta(days=6)
+        monday_str = monday.strftime("%Y-%m-%d")
+        sunday_str = sunday.strftime("%Y-%m-%d")
+
+        # 1. 오늘 학습 시간 계산
+        today_plans = await db.study_plans.find({ # <--------- 수정 필요
+            "user_id": user_id,
+            "date": today,
+            "completed": True
+        }).to_list(None)
+
+        today_hours = 0
+        for plan in today_plans:
+            if plan.get("start_time") and plan.get("end_time"):
+                try:
+                    start_parts = plan["start_time"].split(":")
+                    end_parts = plan["end_time"].split(":")
+                    start_minutes = int(start_parts[0]) * 60 + int(start_parts[1])
+                    end_minutes = int(end_parts[0]) * 60 + int(end_parts[1])
+                    duration_minutes = end_minutes - start_minutes
+                    if duration_minutes > 0:
+                        today_hours += duration_minutes / 60
+                except:
+                    continue
+
+        # 2. 주간 진행률 계산 (완료된 계획 개수 기준)
+        weekly_plans = await db.study_plans.find({ # <--------- 수정 필요
+            "user_id": user_id,
+            "date": {"$gte": monday_str, "$lte": sunday_str}
+        }).to_list(None)
+
+        weekly_progress = 0
+        if weekly_plans:
+            completed_count = len([p for p in weekly_plans if p.get("completed")])
+            total_count = len(weekly_plans)
+            weekly_progress = round((completed_count / total_count) * 100) if total_count > 0 else 0
+
+        # 3. 연속 학습일 계산
+        streak_days = 0
+        current_date = today_date
+
+        while streak_days < 365:  # 최대 1년까지만 확인
+            date_str = current_date.strftime("%Y-%m-%d")
+
+            daily_completed = await db.study_plans.find_one({ # <--------- 수정 필요
+                "user_id": user_id,
+                "date": date_str,
+                "completed": True
+            })
+
+            if daily_completed:
+                streak_days += 1
+                current_date -= timedelta(days=1)
+            else:
+                break
+
+        # 4. 총 포인트 (간단히 완료된 계획 수 × 10)
+        total_completed = await db.study_plans.count_documents({
+            "user_id": user_id,
+            "completed": True
+        })
+        total_points = total_completed * 10
+
+        return {
+            "today_hours": round(today_hours, 1),
+            "weekly_progress": weekly_progress,
+            "streak_days": streak_days,
+            "total_points": total_points
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"통계 조회 중 오류가 발생했습니다: {str(e)}")
+
+
 
 # 건강 체크용 루트 엔드포인트
 @app.get("/")
