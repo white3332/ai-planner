@@ -5,12 +5,12 @@ import bcrypt
 import jwt
 import httpx
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Any, List 
 from bson import ObjectId
-from fastapi import FastAPI, HTTPException, status, Request, Query, Depends
+from fastapi import FastAPI, HTTPException, status, Request, Response, Query, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings
@@ -84,6 +84,40 @@ class StudyPlanUpdate(BaseModel):
     end_time: Optional[str] = None
     description: Optional[str] = None
     completed: Optional[bool] = None
+
+# 대시보드 통계 응답 모델 정의
+class DashboardStatsResponse(BaseModel):
+    today_hours: float
+    weekly_progress: int
+    streak_days: int
+    total_points: int
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v: Any, field: Any) -> ObjectId:
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
+
+# API 응답을 위한 Pydantic 모델
+class StudyPlanResponseModel(BaseModel):
+    # MongoDB의 '_id'를 'id' 필드로 받아서 문자열로 변환해줍니다.
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    title: str
+    type: str
+    date: str
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    description: Optional[str] = None
+    completed: bool
+
+    class Config:
+        # ObjectId 타입을 JSON으로 인코딩할 수 있도록 허용
+        json_encoders = {ObjectId: str}
 
 # 클라이언트가 "/api/login" 경로로 아이디/비밀번호를 보내 토큰을 받아가도록 설정
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
@@ -329,7 +363,7 @@ async def kakao_callback(request: Request):
 
 
 # 학습 계획 생성 엔드포인트
-@app.post("/api/study-plans", status_code=status.HTTP_201_CREATED)
+@app.post("/api/study-plans", status_code=status.HTTP_201_CREATED, response_model=StudyPlanResponseModel)
 async def create_study_plan(plan: StudyPlanCreate, current_user: dict = Depends(get_current_user)):
     try:
         # 학습 계획 데이터 준비
@@ -351,9 +385,8 @@ async def create_study_plan(plan: StudyPlanCreate, current_user: dict = Depends(
 
         # 생성된 계획 반환
         created_plan = await db.study_plans.find_one({"_id": result.inserted_id})
-        created_plan["_id"] = str(created_plan["_id"])
 
-        return {"message": "학습 계획이 성공적으로 생성되었습니다.", "plan": created_plan}
+        return created_plan 
 
     except HTTPException:
         raise
@@ -361,7 +394,7 @@ async def create_study_plan(plan: StudyPlanCreate, current_user: dict = Depends(
         raise HTTPException(status_code=500, detail=f"학습 계획 생성 중 오류가 발생했습니다: {str(e)}")
 
 # 학습 계획 조회 엔드포인트
-@app.get("/api/study-plans")
+@app.get("/api/study-plans", response_model=List[StudyPlanResponseModel])
 async def get_study_plans(current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user["_id"]
@@ -370,11 +403,7 @@ async def get_study_plans(current_user: dict = Depends(get_current_user)):
         cursor = db.study_plans.find({"user_id": user_id}).sort("date", 1)
         plans = await cursor.to_list(length=None)
 
-        # ObjectId를 문자열로 변환
-        for plan in plans:
-            plan["_id"] = str(plan["_id"])
-
-        return {"plans": plans}
+        return plans 
 
     except HTTPException:
         raise
@@ -382,7 +411,7 @@ async def get_study_plans(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"학습 계획 조회 중 오류가 발생했습니다: {str(e)}")
 
 # 학습 계획 수정 엔드포인트
-@app.put("/api/study-plans/{plan_id}")
+@app.put("/api/study-plans/{plan_id}", response_model=StudyPlanResponseModel)
 async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user["_id"]
@@ -392,7 +421,7 @@ async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, current_user: d
             raise HTTPException(status_code=400, detail="잘못된 계획 ID입니다.")
 
         # 기존 계획 확인
-        existing_plan = await db.study_plans.find_one({ # <--------- 수정 필요
+        existing_plan = await db.study_plans.find_one({
             "_id": ObjectId(plan_id),
             "user_id": user_id
         })
@@ -409,7 +438,7 @@ async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, current_user: d
             update_data["updated_at"] = datetime.utcnow()
 
             # MongoDB에서 업데이트
-            result = await db.study_plans.update_one( # <--------- 수정 필요
+            result = await db.study_plans.update_one(
                 {"_id": ObjectId(plan_id), "user_id": user_id},
                 {"$set": update_data}
             )
@@ -419,9 +448,8 @@ async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, current_user: d
 
         # 업데이트된 계획 반환
         updated_plan = await db.study_plans.find_one({"_id": ObjectId(plan_id)})
-        updated_plan["_id"] = str(updated_plan["_id"])
 
-        return {"message": "학습 계획이 성공적으로 수정되었습니다.", "plan": updated_plan}
+        return updated_plan
 
     except HTTPException:
         raise
@@ -429,7 +457,7 @@ async def update_study_plan(plan_id: str, plan: StudyPlanUpdate, current_user: d
         raise HTTPException(status_code=500, detail=f"학습 계획 수정 중 오류가 발생했습니다: {str(e)}")
 
 # 학습 계획 삭제 엔드포인트
-@app.delete("/api/study-plans/{plan_id}")
+@app.delete("/api/study-plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_study_plan(plan_id: str, current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user["_id"]
@@ -439,12 +467,12 @@ async def delete_study_plan(plan_id: str, current_user: dict = Depends(get_curre
             raise HTTPException(status_code=400, detail="잘못된 계획 ID입니다.")
 
         # 사용자 존재 확인
-        user = await db.users.find_one({"user_id": user_id}) # <--------- 수정 필요
+        user = await db.users.find_one({"user_id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
         # 기존 계획 확인
-        existing_plan = await db.study_plans.find_one({ # <--------- 수정 필요
+        existing_plan = await db.study_plans.find_one({
             "_id": ObjectId(plan_id),
             "user_id": user_id
         })
@@ -452,7 +480,7 @@ async def delete_study_plan(plan_id: str, current_user: dict = Depends(get_curre
             raise HTTPException(status_code=404, detail="학습 계획을 찾을 수 없습니다.")
 
         # MongoDB에서 삭제
-        result = await db.study_plans.delete_one({ # <--------- 수정 필요
+        result = await db.study_plans.delete_one({
             "_id": ObjectId(plan_id),
             "user_id": user_id
         })
@@ -460,7 +488,7 @@ async def delete_study_plan(plan_id: str, current_user: dict = Depends(get_curre
         if result.deleted_count == 0:
             raise HTTPException(status_code=400, detail="삭제할 계획이 없습니다.")
 
-        return {"message": "학습 계획이 성공적으로 삭제되었습니다."}
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     except HTTPException:
         raise
@@ -471,13 +499,13 @@ async def delete_study_plan(plan_id: str, current_user: dict = Depends(get_curre
 
 
 # 대시보드 통계 조회 엔드포인트
-@app.get("/api/dashboard/stats")
+@app.get("/api/dashboard/stats", response_model=DashboardStatsResponse)
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user["_id"]
 
         # 사용자 존재 확인
-        user = await db.users.find_one({"user_id": user_id}) # <--------- 수정 필요
+        user = await db.users.find_one({"user_id": user_id}) 
         if not user:
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
@@ -492,7 +520,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         sunday_str = sunday.strftime("%Y-%m-%d")
 
         # 1. 오늘 학습 시간 계산
-        today_plans = await db.study_plans.find({ # <--------- 수정 필요
+        today_plans = await db.study_plans.find({
             "user_id": user_id,
             "date": today,
             "completed": True
@@ -513,7 +541,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
                     continue
 
         # 2. 주간 진행률 계산 (완료된 계획 개수 기준)
-        weekly_plans = await db.study_plans.find({ # <--------- 수정 필요
+        weekly_plans = await db.study_plans.find({ 
             "user_id": user_id,
             "date": {"$gte": monday_str, "$lte": sunday_str}
         }).to_list(None)
@@ -531,7 +559,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         while streak_days < 365:  # 최대 1년까지만 확인
             date_str = current_date.strftime("%Y-%m-%d")
 
-            daily_completed = await db.study_plans.find_one({ # <--------- 수정 필요
+            daily_completed = await db.study_plans.find_one({ 
                 "user_id": user_id,
                 "date": date_str,
                 "completed": True

@@ -54,8 +54,7 @@ export const getStudyPlans = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.plans;
+    return response.json();
   } catch (error) {
     console.error('학습 계획 조회 오류:', error);
     throw error;
@@ -113,7 +112,7 @@ export const groupPlansByDate = (plans) => {
 
     // API에서 받은 데이터를 프론트엔드 형식으로 변환
     grouped[date].push({
-      id: plan._id,
+      id: plan.id,
       title: plan.title,
       type: plan.type,
       time: plan.start_time && plan.end_time ? `${plan.start_time}-${plan.end_time}` : '시간 미정',

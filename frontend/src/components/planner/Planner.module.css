@@ -1,8 +1,8 @@
-/* PlannerPage.css */
-.planner-container {
+/* frontend/src/components/planner/Planner.module.css */
+
+.plannerContainer {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f8f9fa;
-  line-height: 1.6;
   min-height: 100vh;
   display: flex;
   margin: 0;
@@ -10,60 +10,11 @@
   width: 100vw;
 }
 
-.planner-container * {
-  margin: 0;
-  padding: 0;
+.plannerContainer * {
   box-sizing: border-box;
 }
 
-.sidebar {
-  width: 250px;
-  min-width: 250px;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 2rem 0;
-  z-index: 1000;
-}
-
-.logo {
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 2rem;
-  padding: 0 1rem;
-  color: white;
-}
-
-.nav-menu {
-  list-style: none;
-}
-
-.nav-item {
-  margin-bottom: 0.5rem;
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  color: white;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  gap: 10px;
-}
-
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-right: 3px solid white;
-}
-
-.nav-link.active {
-  background: rgba(255, 255, 255, 0.2);
-  border-right: 3px solid white;
-}
-
-.main-content {
+.plannerMainContent {
   flex: 1;
   padding: 0;
   height: 100vh;
@@ -81,13 +32,13 @@
   align-items: center;
 }
 
-.header-title {
+.headerTitle {
   font-size: 1.8rem;
   font-weight: bold;
   color: #333;
 }
 
-.header-actions {
+.headerActions {
   display: flex;
   gap: 10px;
 }
@@ -108,18 +59,52 @@
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
-.btn-secondary {
+.btnSecondary {
   background: white;
   color: #667eea;
   border: 2px solid #667eea;
 }
 
-.btn-secondary:hover {
+.btnSecondary:hover {
   background: #667eea;
   color: white;
 }
 
-.calendar-container {
+.btnSuccess {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+}
+
+.btnWarning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+  color: white;
+}
+
+.btnDanger {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+}
+
+.btnSuccess:hover {
+  background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+  transform: translateY(-2px);
+}
+
+.btnWarning:hover {
+  background: linear-gradient(135deg, #ff8f00 0%, #f57c00 100%);
+  transform: translateY(-2px);
+}
+
+.btnDanger:hover {
+  background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+  transform: translateY(-2px);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.calendarContainer {
   background: white;
   border-radius: 0;
   box-shadow: none;
@@ -129,21 +114,21 @@
   flex-direction: column;
 }
 
-.calendar-header {
+.calendarHeader {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 2rem;
   text-align: center;
 }
 
-.calendar-nav {
+.calendarNav {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.calendar-nav button {
+.calendarNav button {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
@@ -153,16 +138,21 @@
   transition: background 0.3s ease;
 }
 
-.calendar-nav button:hover {
+.calendarNav button:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
-.current-month {
+.currentMonth {
   font-size: 1.5rem;
   font-weight: bold;
 }
 
-.calendar-grid {
+.calendarSubtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
@@ -170,7 +160,7 @@
   flex: 1;
 }
 
-.calendar-day-header {
+.calendarDayHeader {
   background: #f8f9fa;
   padding: 1rem;
   text-align: center;
@@ -178,7 +168,7 @@
   color: #495057;
 }
 
-.calendar-day {
+.calendarDay {
   background: white;
   min-height: 140px;
   padding: 10px;
@@ -188,57 +178,62 @@
   position: relative;
 }
 
-.calendar-day:hover {
+.calendarDay:hover {
   background: #f8f9fa;
 }
 
-.calendar-day.other-month {
+.calendarDay.otherMonth {
   background: #f8f9fa;
   color: #adb5bd;
 }
 
-.calendar-day.selected {
+.calendarDay.selected {
   background: #e3f2fd;
   border-color: #2196f3;
 }
 
-.day-number {
+.dayNumber {
   font-weight: 600;
   margin-bottom: 5px;
 }
 
-.study-item {
+.studyItems {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.studyItem {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.8rem;
-  margin-bottom: 3px;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.study-item:hover {
+.studyItem:hover {
   transform: scale(1.05);
 }
 
-.study-item.completed {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%) !important;
+.studyItem.completed {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
 }
 
-.study-item.quiz {
+.studyItem.quiz {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
 }
 
-.study-item.project {
+.studyItem.project {
   background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
 }
 
-.study-item.review {
+.studyItem.review {
   background: linear-gradient(135deg, #607d8b 0%, #455a64 100%);
 }
 
-.ai-suggestions {
+.aiSuggestions {
   margin-top: 1rem;
   background: white;
   border-radius: 15px;
@@ -246,7 +241,7 @@
   padding: 1.5rem;
 }
 
-.suggestions-title {
+.suggestionsTitle {
   font-size: 1.3rem;
   font-weight: bold;
   color: #333;
@@ -256,7 +251,7 @@
   gap: 10px;
 }
 
-.suggestion-item {
+.suggestionItem {
   background: #f8f9fa;
   padding: 1rem;
   border-radius: 10px;
@@ -266,23 +261,23 @@
   cursor: pointer;
 }
 
-.suggestion-item:hover {
+.suggestionItem:hover {
   background: #e9ecef;
   transform: translateX(5px);
 }
 
-.suggestion-title {
+.suggestionTitle {
   font-weight: 600;
   color: #333;
   margin-bottom: 0.5rem;
 }
 
-.suggestion-desc {
+.suggestionDesc {
   color: #666;
   font-size: 0.9rem;
 }
 
-.add-task-modal {
+.modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -295,7 +290,7 @@
   align-items: center;
 }
 
-.modal-content {
+.modalContent {
   background: white;
   padding: 2rem;
   border-radius: 15px;
@@ -305,20 +300,20 @@
   overflow-y: auto;
 }
 
-.modal-header {
+.modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
 
-.modal-title {
+.modalTitle {
   font-size: 1.5rem;
   font-weight: bold;
   color: #333;
 }
 
-.close-btn {
+.closeBtn {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -326,57 +321,21 @@
   color: #666;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #333;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.time-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-/* 상세보기 모달 스타일 */
-.study-detail {
+.studyDetail {
   padding: 1rem 0;
 }
 
-.detail-section {
+.detailSection {
   margin-bottom: 2rem;
 }
 
-.detail-section h3 {
+.detailSection h3 {
   font-size: 1.4rem;
   color: #333;
   margin-bottom: 1rem;
 }
 
-.detail-badges {
+.detailBadges {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -390,55 +349,55 @@
   font-weight: 500;
 }
 
-.badge-study {
+.badgeStudy {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
-.badge-quiz {
+.badgeQuiz {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
 }
 
-.badge-project {
+.badgeProject {
   background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
   color: white;
 }
 
-.badge-review {
+.badgeReview {
   background: linear-gradient(135deg, #607d8b 0%, #455a64 100%);
   color: white;
 }
 
-.badge-completed {
+.badgeCompleted {
   background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
 }
 
-.badge-pending {
+.badgePending {
   background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
   color: white;
 }
 
-.detail-item {
+.detailItem {
   display: flex;
   margin-bottom: 0.75rem;
   align-items: flex-start;
 }
 
-.detail-label {
+.detailLabel {
   font-weight: 600;
   color: #555;
   min-width: 80px;
   margin-right: 1rem;
 }
 
-.detail-value {
+.detailValue {
   color: #333;
   flex: 1;
 }
 
-.detail-actions {
+.detailActions {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -446,47 +405,47 @@
   margin-top: 2rem;
 }
 
-.btn-success {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: white;
+.formGroup {
+  margin-bottom: 1.5rem;
 }
 
-.btn-warning {
-  background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
-  color: white;
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
 }
 
-.btn-danger {
-  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  color: white;
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
 }
 
-.btn-success:hover {
-  background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
-  transform: translateY(-2px);
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #667eea;
 }
 
-.btn-warning:hover {
-  background: linear-gradient(135deg, #ff8f00 0%, #f57c00 100%);
-  transform: translateY(-2px);
-}
-
-.btn-danger:hover {
-  background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
-  transform: translateY(-2px);
+.timeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-
-  .main-content {
+  .plannerMainContent {
     margin-left: 0;
   }
 
-  .calendar-day {
+  .calendarDay {
     min-height: 80px;
     font-size: 0.8rem;
   }
@@ -496,16 +455,16 @@
     gap: 1rem;
   }
 
-  .detail-actions {
+  .detailActions {
     flex-direction: column;
   }
 
-  .detail-item {
+  .detailItem {
     flex-direction: column;
     gap: 0.25rem;
   }
 
-  .detail-label {
+  .detailLabel {
     min-width: auto;
     margin-right: 0;
   }
